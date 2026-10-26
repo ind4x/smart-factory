@@ -1,54 +1,122 @@
-# Smart factory: AI quality control
+# Smart Factory: Real-Time AI Quality Control
 
-The smart factory is a real-time edge computing system designed for automated
-quality control in manufacturing environments. It uses computer vision to
-detect product defects and provides a dashboard for monitoring production
-statistics.
+The Smart Factory is a cyber-physical edge computing system designed for automated,
+real-time defect detection and quality control on industrial manufacturing lines.
+The system pairs embedded YOLOv8 computer vision inference with an MQTT messaging backbone
+and a live Flask supervisory dashboard.
 
-## Features
+---
 
-- Real-time detection: Uses YOLOv8 for high-speed defect detection.
-- Hardware integration: Designed for Raspberry Pi and Picamera2.
-- Messaging: Publishes production statistics to an MQTT broker.
-- Dashboard: Features a Flask-based web interface for real-time production
-  metrics.
-- Logging: Maintains persistent records of detections in CSV format.
+## System Architecture
 
-## Project structure
+```text
++-----------------------+
+|  Manufacturing Line   |  Camera Feed (Picamera2 / Web Camera)
++-----------------------+
+            |
+            v
++-----------------------+
+|   YOLOv8 Edge Node    |  - High-speed object detection & classification (src/detect.py)
+|   (Inference Engine)  |  - Defect labeling, bounding boxes & confidence scoring
++-----------------------+
+            |
+            +---------------------------------------+
+            |                                       |
+            v                                       v
++-----------------------+               +-----------------------+
+|  Persistent Logging   |               |   MQTT Client Node    |  (src/mqtt_client.py)
+|  - CSV Audit Records  |               |  - JSON Telemetry     |
+|  - Anomaly Tracking   |               |  - QoS 1 Delivery     |
++-----------------------+               +-----------------------+
+                                                    |
+                                                    v
+                                        +-----------------------+
+                                        |  MQTT Broker Engine   |  (Mosquitto, Port 1883)
+                                        +-----------------------+
+                                                    |
+                                                    v
+                                        +-----------------------+
+                                        | Real-Time Dashboard   |  (src/dashboard.py)
+                                        | - Flask Web Server    |
+                                        | - HTTP localhost:5000 |
+                                        +-----------------------+
+```
 
-- `src/detect.py`: Main detection loop and camera interface.
-- `src/dashboard.py`: Flask web server for the visualization dashboard.
-- `src/mqtt_client.py`: Shared MQTT logic for data transmission.
-- `models/`: Directory for trained YOLO models.
-- `logs/`: CSV logs for production history.
+---
 
-## Setup
+## Key Features
 
-Follow these steps to configure the system:
+- **Real-Time Edge Detection:** Optimized YOLOv8 neural network delivering low-latency object classification and defect identification on edge hardware.
+- **Hardware Integration:** Native interfaces for Raspberry Pi 4/5, Picamera2, and generic USB video capture devices.
+- **Industrial Telemetry:** Asynchronous publish/subscribe message delivery over MQTT to industrial brokers.
+- **Supervisory Dashboard:** Responsive Flask web interface rendering real-time defect counts, throughput rates, and classification confidence scores.
+- **Compliance & Auditing:** Automated persistent logging of detection events and timestamps in structured CSV formats.
 
-1. Clone the repository:
+---
+
+## Project Structure
+
+```text
+smart-factory/
+├── README.md                          # Technical specification and system architecture
+├── requirements.txt                   # Python runtime dependencies
+├── models/                            # Trained YOLO model weights (.pt files)
+├── logs/                              # Production defect and detection CSV logs
+└── src/                               # Application source code
+    ├── detect.py                      # Video capture loop and YOLOv8 inference engine
+    ├── dashboard.py                   # Flask server rendering live production statistics
+    └── mqtt_client.py                 # Telemetry publisher and broker connection handler
+```
+
+---
+
+## Execution Instructions
+
+### 1. Prerequisites and Setup
+- Python 3.10 or higher
+- Running MQTT Broker (e.g., Eclipse Mosquitto)
+
+```bash
+git clone git@github.com:ind4x/smart-factory.git
+cd smart-factory
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Launching the System
+1. **Start the MQTT Broker:**
    ```bash
-   git clone <repo-url>
-   cd smart-factory
+   mosquitto -v
    ```
-2. Create a virtual environment:
+2. **Start the Supervisory Web Dashboard:**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   python3 src/dashboard.py
    ```
-3. Install dependencies:
+   Open `http://localhost:5000` in your web browser.
+3. **Start the Edge Detection Engine:**
    ```bash
-   pip install -r requirements.txt
+   python3 src/detect.py
    ```
-4. Run the system:
-   - Start the MQTT broker.
-   - Run the detector: `python src/detect.py`
-   - Run the dashboard: `python src/dashboard.py`
 
-## Dashboard
+---
 
-The dashboard is accessible at `http://localhost:5000` by default.
+## Technology Stack
+
+- **Computer Vision & Ingestion:** OpenCV, YOLOv8 (Ultralytics), Picamera2
+- **Industrial Messaging:** MQTT (Paho-MQTT client, QoS 1)
+- **Web Supervision:** Flask, HTML5, CSS3, JavaScript
+- **Programming Language:** Python 3
+
+---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Author
+
+- **Author:** Youssef Fellah ([ind4x_](https://github.com/ind4x))
+- **Institution:** Mundiapolis University, Engineering Cycle
